@@ -1,0 +1,21 @@
+version: '3'
+services:
+  roxyzcqq:
+    container_name: 'roxyzcqq'
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.development
+    env_file:
+      - .development.env
+    volumes:
+      - .:/roxyzcqq
+    ports:
+      - 3000:3000
+    depends_on:
+      - mysql
+  mysql:
+    image: mysql
+    env_file:
+      - .development.env
+    ports:
+      - 3306:3306
