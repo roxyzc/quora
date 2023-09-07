@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { TokenService } from './token/token.service';
+import { AllExceptionsFilter } from './filters/exception-custom.filter';
+import { RoleGuard } from './guards/roles.guard';
 import config from './config';
 import databaseConfig from './config/database.config';
-import { AllExceptionsFilter } from './filters/exception-custom.filter';
 
 @Module({
   imports: [
@@ -29,6 +30,10 @@ import { AllExceptionsFilter } from './filters/exception-custom.filter';
     {
       provide: APP_FILTER,
       useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RoleGuard,
     },
     TokenService,
   ],

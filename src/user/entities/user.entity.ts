@@ -1,6 +1,6 @@
 import { AbstractEntity } from 'src/entities/abstract.entity';
-import { Entity, Column, OneToOne, JoinColumn } from 'typeorm';
-import { UserRoles } from 'src/user/interfaces/user.interface';
+import { Entity, Column, OneToOne } from 'typeorm';
+import { UserRoles } from 'src/types/roles.type';
 import { Token } from 'src/token/entities/token.entity';
 
 interface IUser {
@@ -29,11 +29,8 @@ export class User extends AbstractEntity<User> implements IUser {
   @Column({ type: 'enum', enum: UserRoles, default: UserRoles.USER })
   role: UserRoles;
 
-  @OneToOne(() => Token, {
-    cascade: true,
-    onDelete: 'CASCADE',
+  @OneToOne(() => Token, (token) => token.user, {
     eager: true,
   })
-  @JoinColumn()
   token: Token;
 }

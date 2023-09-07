@@ -4,12 +4,12 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { EntityManager, Repository } from 'typeorm';
+import { EntityManager } from 'typeorm';
 import { TokenService } from 'src/token/token.service';
-import { UserRoles } from 'src/user/interfaces/user.interface';
+import { UserRoles } from 'src/types/roles.type';
 import { Token } from 'src/token/entities/token.entity';
 import { User } from 'src/user/entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { UserService } from 'src/user/services/user.service';
 import * as bcrypt from 'bcrypt';
 
 interface ISignUpParams {
@@ -25,8 +25,7 @@ interface ISignInParams {
 
 interface IAuthService {
   signUp(params: ISignUpParams): Promise<string>;
-  signIn(params: ISignInParams): Promise<User>;
-  findUserByEmail(email: string): Promise<User>;
+  signIn(params: ISignInParams): Promise<{ token: string }>;
 }
 
 @Injectable()
@@ -34,60 +33,81 @@ export class AuthService implements IAuthService {
   constructor(
     private readonly tokenService: TokenService,
     private readonly entityManager: EntityManager,
-    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    private readonly userService: UserService,
   ) {}
 
   async signUp({ email, username, password }: ISignUpParams) {
     let role = UserRoles.USER;
+
     try {
-      const existingUser = await this.findUserByEmail(email);
-      if (existingUser) throw new ConflictException('Email already exists');
-      if (email === 'roxyzc12@gmail.com') role = UserRoles.ADMIN;
-      const { accessToken, refreshToken } = await this.tokenService.getToken({
-        name: username,
-        email,
-        role,
-      });
+      const existingUser = await this.userService.findUserByEmail(email);
+
+      if (existingUser) {
+        throw new ConflictException('Email already exists');
+      }
+
+      if (email === 'roxyzc12@gmail.com') {
+        role = UserRoles.ADMIN;
+      }
 
       await this.entityManager.transaction(async (entityManager) => {
-        const token = entityManager.create(Token, {
-          accessToken,
-          refreshToken,
-        });
-        const user = entityManager.create(User, {
+        const createUser = entityManager.create(User, {
           username,
           password,
-          token,
           email,
           role,
         });
-        await entityManager.save(user);
+
+        const createToken = entityManager.create(Token, { user: createUser });
+        await entityManager.save(createToken);
       });
-      return accessToken;
+
+      return 'berhasil';
     } catch (error) {
-      console.log(error.message);
+      console.error(error.message);
       throw error;
     }
   }
 
-  async signIn({ email, password }: ISignInParams): Promise<User> {
+  async signIn({ email, password }: ISignInParams): Promise<{ token: string }> {
     try {
-      const user = await this.findUserByEmail(email);
-      if (!user) throw new NotFoundException('User not found');
-      if (user.active === false)
+      const user = await this.userService.findUserByEmail(email);
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (!user.active) {
         throw new BadRequestException('User is not active');
-      console.log(password, user.password);
-      const isValid = await bcrypt.compare(password, user.password);
-      if (!isValid) throw new BadRequestException('Password invalid');
-      return user;
+      }
+
+      const isValidPassword = await bcrypt.compare(password, user.password);
+
+      if (!isValidPassword) {
+        throw new BadRequestException('Password invalid');
+      }
+
+      let token = user.token.accessToken;
+
+      if (!token || !user.token.refreshToken) {
+        const { accessToken, refreshToken } = await this.tokenService.getToken({
+          userId: user.id,
+          email,
+          role: user.role,
+        });
+
+        await this.entityManager.update(
+          Token,
+          { id: user.token.id },
+          { accessToken, refreshToken },
+        );
+
+        token = accessToken;
+      }
+
+      return { token };
     } catch (error) {
       throw error;
     }
-  }
-
-  async findUserByEmail(email: string): Promise<User> {
-    return await this.userRepository.findOne({
-      where: { email },
-    });
   }
 }

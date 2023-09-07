@@ -1,8 +1,8 @@
-import { UserRoles } from 'src/user/interfaces/user.interface';
+import { UserRoles } from 'src/types/roles.type';
 
 export interface ITokenParams {
+  userId: string;
   email: string;
-  name: string;
   role: UserRoles;
 }
 

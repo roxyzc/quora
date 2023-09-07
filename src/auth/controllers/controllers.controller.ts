@@ -14,7 +14,7 @@ export class ControllersController {
 
   @Post('signin')
   async signin(@Body() body: SigninDto) {
-    const user = await this.authService.signIn(body);
-    return { message: 'login successfully', user };
+    const { token } = await this.authService.signIn(body);
+    return { message: 'login successfully', token };
   }
 }
