@@ -4,9 +4,9 @@ import { DatabaseModule } from './database/database.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { TokenService } from './token/token.service';
 import { AllExceptionsFilter } from './filters/exception-custom.filter';
 import { RoleGuard } from './guards/roles.guard';
+import { TokenModule } from './token/token.module';
 import config from './config';
 import databaseConfig from './config/database.config';
 
@@ -25,6 +25,7 @@ import databaseConfig from './config/database.config';
     DatabaseModule,
     UserModule,
     AuthModule,
+    TokenModule,
   ],
   providers: [
     {
@@ -35,7 +36,6 @@ import databaseConfig from './config/database.config';
       provide: APP_GUARD,
       useClass: RoleGuard,
     },
-    TokenService,
   ],
 })
 export class AppModule {}

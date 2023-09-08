@@ -2,7 +2,7 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
-  BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 
 export class UserInterceptor implements NestInterceptor {
@@ -14,7 +14,7 @@ export class UserInterceptor implements NestInterceptor {
       user.userId !== params.id &&
       user.role !== 'admin'
     ) {
-      throw new BadRequestException();
+      throw new ForbiddenException();
     }
     return next.handle();
   }

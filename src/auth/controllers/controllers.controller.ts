@@ -9,7 +9,8 @@ export class ControllersController {
 
   @Post('signup')
   async signup(@Body() body: SignupDto) {
-    return await this.authService.signUp(body);
+    const response = await this.authService.signUp(body);
+    return { message: response };
   }
 
   @Post('signin')

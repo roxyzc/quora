@@ -18,10 +18,10 @@ export class Token implements IToken {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ type: 'varchar', nullable: true, length: 1000 })
+  @Column({ type: 'varchar', nullable: false, length: 1000 })
   accessToken?: string;
 
-  @Column({ type: 'varchar', nullable: true, length: 1000 })
+  @Column({ type: 'varchar', nullable: false, length: 1000 })
   refreshToken?: string;
 
   @OneToOne(() => User, (user) => user.token, {

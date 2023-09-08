@@ -5,7 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
-import { TokenService } from 'src/token/token.service';
+import { TokenService } from 'src/token/services/token.service';
 import { UserRoles } from 'src/types/roles.type';
 import { Token } from 'src/token/entities/token.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -23,13 +23,8 @@ interface ISignInParams {
   password: string;
 }
 
-interface IAuthService {
-  signUp(params: ISignUpParams): Promise<string>;
-  signIn(params: ISignInParams): Promise<{ token: string }>;
-}
-
 @Injectable()
-export class AuthService implements IAuthService {
+export class AuthService {
   constructor(
     private readonly tokenService: TokenService,
     private readonly entityManager: EntityManager,
@@ -58,13 +53,11 @@ export class AuthService implements IAuthService {
           role,
         });
 
-        const createToken = entityManager.create(Token, { user: createUser });
-        await entityManager.save(createToken);
+        await entityManager.save(createUser);
       });
 
       return 'berhasil';
     } catch (error) {
-      console.error(error.message);
       throw error;
     }
   }
@@ -87,21 +80,23 @@ export class AuthService implements IAuthService {
         throw new BadRequestException('Password invalid');
       }
 
-      let token = user.token.accessToken;
-
-      if (!token || !user.token.refreshToken) {
+      let token = user.token?.accessToken;
+      if (!user.token) {
         const { accessToken, refreshToken } = await this.tokenService.getToken({
           userId: user.id,
           email,
           role: user.role,
         });
 
-        await this.entityManager.update(
-          Token,
-          { id: user.token.id },
-          { accessToken, refreshToken },
-        );
+        await this.entityManager.transaction(async (entityManager) => {
+          const createToken = entityManager.create(Token, {
+            user,
+            accessToken,
+            refreshToken,
+          });
 
+          await entityManager.save(createToken);
+        });
         token = accessToken;
       }
 
