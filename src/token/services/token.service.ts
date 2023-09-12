@@ -3,6 +3,7 @@ import {
   Injectable,
   BadRequestException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EntityManager, Repository } from 'typeorm';
@@ -13,6 +14,7 @@ import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class TokenService {
+  private readonly logger = new Logger(TokenService.name);
   private accessTokenSecret: string;
   private refreshTokenSecret: string;
 
@@ -92,7 +94,9 @@ export class TokenService {
       );
 
       if (refreshTokenValid) {
-        const token = jwt.sign(payload, this.accessTokenSecret);
+        const token = jwt.sign(payload, this.accessTokenSecret, {
+          expiresIn: '1h',
+        });
         await this.entityManager.update(
           Token,
           { id: findUser.token.id },
@@ -105,6 +109,7 @@ export class TokenService {
       await this.entityManager.update(Token, { id: findUser.token.id }, token);
       return { token };
     } catch (error) {
+      this.logger.error(error.message);
       throw error;
     }
   }

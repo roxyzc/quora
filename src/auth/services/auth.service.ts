@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { TokenService } from 'src/token/services/token.service';
@@ -25,6 +26,8 @@ interface ISignInParams {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly tokenService: TokenService,
     private readonly entityManager: EntityManager,
@@ -58,6 +61,7 @@ export class AuthService {
 
       return 'berhasil';
     } catch (error) {
+      this.logger.error(error.message);
       throw error;
     }
   }
@@ -102,6 +106,7 @@ export class AuthService {
 
       return { token };
     } catch (error) {
+      this.logger.error(error.message);
       throw error;
     }
   }

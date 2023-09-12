@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { AllExceptionsFilter } from './filters/exception-custom.filter';
 import { RoleGuard } from './guards/roles.guard';
 import { TokenModule } from './token/token.module';
+import { CacheModule } from '@nestjs/cache-manager';
+import { CacheConfigService } from './cache/cache.service';
 import config from './config';
 import databaseConfig from './config/database.config';
 
@@ -21,6 +23,10 @@ import databaseConfig from './config/database.config';
       load: [config, databaseConfig],
       expandVariables: true,
       cache: true,
+    }),
+    CacheModule.registerAsync({
+      useClass: CacheConfigService,
+      isGlobal: true,
     }),
     DatabaseModule,
     UserModule,

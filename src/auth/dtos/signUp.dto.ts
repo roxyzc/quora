@@ -2,16 +2,16 @@ import {
   IsString,
   IsEmail,
   IsStrongPassword,
-  IsAlpha,
   IsNotEmpty,
   MinLength,
   MaxLength,
+  IsAlphanumeric,
 } from 'class-validator';
 
 export class SignupDto {
   @IsString()
   @IsNotEmpty()
-  @IsAlpha()
+  @IsAlphanumeric()
   @MinLength(6)
   @MaxLength(24)
   username: string;
