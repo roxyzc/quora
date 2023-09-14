@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Reflector } from '@nestjs/core';
 import * as jwt from 'jsonwebtoken';
-import { UserRoles } from 'src/types/roles.type';
+import { UserRoles } from 'src/enums/userRoles.enum';
 
 interface JWTPayload {
   email: string;

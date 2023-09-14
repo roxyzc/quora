@@ -11,6 +11,7 @@ import { User } from '../entities/user.entity';
 import { UserResponse } from '../dtos/response.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { reverseSlug, slug } from 'src/services/slug.service';
 
 @Injectable()
 export class UserService {
@@ -21,16 +22,16 @@ export class UserService {
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
-  async findUsers(skip: number, take: number) {
+  async findUsers(page: number, pageSize: number) {
     try {
-      if (skip < 1 || take < 1) {
+      if (page < 1 || pageSize < 1) {
         throw new BadRequestException(
-          'Skip and take must be positive integers.',
+          'page and pageSize must be positive integers.',
         );
       }
-      const limit = take > 10 ? 10 : take;
-      const page = skip;
+      const limit = pageSize > 10 ? 10 : pageSize;
       const start = (page - 1) * limit;
+      console.log(start);
       const end = page * limit;
       const [results, total] = await this.userRepository.findAndCount({
         where: {
@@ -44,7 +45,7 @@ export class UserService {
           createdAt: true,
           updatedAt: true,
         },
-        take: page - 1,
+        take: limit,
         skip: start,
       });
 
@@ -52,7 +53,8 @@ export class UserService {
         (user) =>
           new UserResponse({
             ...user,
-            token: user.token?.accessToken ?? 'undefined',
+            username: reverseSlug(user.username),
+            token: 'rahasia-user',
           }),
       );
 
@@ -60,6 +62,7 @@ export class UserService {
       Object.assign(pagination, {
         totalData: total,
         totalPage: Math.ceil(total / limit),
+        currentPage: page,
       });
 
       if (end < total) {
@@ -68,13 +71,16 @@ export class UserService {
         });
       }
 
-      if (start > 0) {
+      if (start > 0 && page - Math.ceil(total / limit) < 1) {
         Object.assign(pagination, {
           prev: { page: page - 1, limit, ramaining: total - (total - start) },
         });
       }
-      if (page > Math.ceil(total / limit)) {
-        Object.assign(pagination, { prev: { remaining: total } });
+      console.log(page - Math.ceil(total / limit) === 1);
+      if (page - Math.ceil(total / limit) === 1) {
+        Object.assign(pagination, {
+          prev: { remaining: total },
+        });
       }
 
       return { pagination, users };
@@ -103,7 +109,8 @@ export class UserService {
 
       const user = new UserResponse({
         ...findUser,
-        token: 'rahasia',
+        username: reverseSlug(findUser.username),
+        token: 'rahasia-user',
       });
 
       await this.cacheManager.set(`key=${id}`, user);
@@ -119,15 +126,24 @@ export class UserService {
     });
   }
 
-  async findUsersByIndexFullText(username: string) {
+  async findUserByUsernameAndEmail(username?: string, email?: string) {
     try {
-      const users = await this.userRepository
+      const sanitizedUsername = slug(username ?? '');
+      const user = await this.userRepository
         .createQueryBuilder()
-        .select()
-        .where(`MATCH(username) AGAINST ("${username} " IN BOOLEAN MODE)`)
-        .getMany();
+        .select(['id, username, email, active, createdAt, updatedAt'])
+        .where(`username = :username`, { username: sanitizedUsername })
+        .orWhere('email = :email', { email })
+        .getRawOne();
 
-      return users;
+      if (!user) {
+        throw new NotFoundException('user not found');
+      }
+
+      return new UserResponse({
+        ...user,
+        username: reverseSlug(user.username),
+      });
     } catch (error) {
       this.logger.error(error.message);
       throw error;

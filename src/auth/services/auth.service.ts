@@ -3,14 +3,16 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  UnauthorizedException,
   Logger,
 } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { TokenService } from 'src/token/services/token.service';
-import { UserRoles } from 'src/types/roles.type';
+import { UserRoles } from 'src/enums/userRoles.enum';
 import { Token } from 'src/token/entities/token.entity';
 import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/services/user.service';
+import { slug } from 'src/services/slug.service';
 import * as bcrypt from 'bcrypt';
 
 interface ISignUpParams {
@@ -50,7 +52,7 @@ export class AuthService {
 
       await this.entityManager.transaction(async (entityManager) => {
         const createUser = entityManager.create(User, {
-          username,
+          username: slug(username),
           password,
           email,
           role,
@@ -59,7 +61,7 @@ export class AuthService {
         await entityManager.save(createUser);
       });
 
-      return 'berhasil';
+      return 'Created successfully';
     } catch (error) {
       this.logger.error(error.message);
       throw error;
@@ -81,7 +83,7 @@ export class AuthService {
       const isValidPassword = await bcrypt.compare(password, user.password);
 
       if (!isValidPassword) {
-        throw new BadRequestException('Password invalid');
+        throw new UnauthorizedException('Password invalid');
       }
 
       let token = user.token?.accessToken;

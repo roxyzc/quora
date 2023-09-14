@@ -1,6 +1,6 @@
 import { AbstractEntity } from 'src/entities/abstract.entity';
 import { Entity, Column, OneToOne, Index } from 'typeorm';
-import { UserRoles } from 'src/types/roles.type';
+import { UserRoles } from 'src/enums/userRoles.enum';
 import { Token } from 'src/token/entities/token.entity';
 
 interface IUser {
@@ -13,9 +13,10 @@ interface IUser {
 }
 
 @Entity()
+@Index('idx_username', ['username'], { unique: true })
+@Index('idx_email', ['email'], { unique: true })
 export class User extends AbstractEntity<User> implements IUser {
   @Column({ type: 'varchar', length: 24, unique: true, nullable: false })
-  @Index('index_f_username', { fulltext: true })
   username: string;
 
   @Column({ type: 'varchar', length: 100, unique: true, nullable: false })

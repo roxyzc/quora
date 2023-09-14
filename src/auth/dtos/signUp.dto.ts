@@ -5,13 +5,13 @@ import {
   IsNotEmpty,
   MinLength,
   MaxLength,
-  IsAlphanumeric,
 } from 'class-validator';
+import { ValidationUsername } from 'src/decorators/validationUsername.decorator';
 
 export class SignupDto {
   @IsString()
   @IsNotEmpty()
-  @IsAlphanumeric()
+  @ValidationUsername()
   @MinLength(6)
   @MaxLength(24)
   username: string;

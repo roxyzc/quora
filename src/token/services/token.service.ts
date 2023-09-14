@@ -107,7 +107,10 @@ export class TokenService {
 
       const token = await this.getToken(payload);
       await this.entityManager.update(Token, { id: findUser.token.id }, token);
-      return { token };
+      return {
+        accessToken: token.accessToken,
+        refreshToken: token.refreshToken,
+      };
     } catch (error) {
       this.logger.error(error.message);
       throw error;

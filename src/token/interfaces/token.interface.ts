@@ -1,4 +1,4 @@
-import { UserRoles } from 'src/types/roles.type';
+import { UserRoles } from 'src/enums/userRoles.enum';
 
 export interface GetTokenParams {
   userId: string;
