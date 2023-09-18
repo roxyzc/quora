@@ -31,30 +31,28 @@ export class UserService {
       }
       const limit = pageSize > 10 ? 10 : pageSize;
       const start = (page - 1) * limit;
-      console.log(start);
       const end = page * limit;
-      const [results, total] = await this.userRepository.findAndCount({
-        where: {
-          active: true,
-        },
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          active: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-        take: limit,
-        skip: start,
-      });
+
+      const [results, total] = await this.userRepository
+        .createQueryBuilder('u')
+        .select([
+          'u.id',
+          'u.username',
+          'u.email',
+          'u.active',
+          'u.createdAt',
+          'u.updatedAt',
+        ])
+        .where('u.active = :active', { active: true })
+        .take(limit)
+        .skip(start)
+        .getManyAndCount();
 
       const users = results.map(
         (user) =>
           new UserResponse({
             ...user,
             username: reverseSlug(user.username),
-            token: 'rahasia-user',
           }),
       );
 
@@ -76,7 +74,6 @@ export class UserService {
           prev: { page: page - 1, limit, ramaining: total - (total - start) },
         });
       }
-      console.log(page - Math.ceil(total / limit) === 1);
       if (page - Math.ceil(total / limit) === 1) {
         Object.assign(pagination, {
           prev: { remaining: total },
@@ -94,23 +91,16 @@ export class UserService {
     try {
       const value = await this.cacheManager.get(`key=${id}`);
       if (value) return new UserResponse(value);
-      const findUser = await this.userRepository.findOne({
-        where: { id },
-        select: {
-          id: true,
-          username: true,
-          email: true,
-          active: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      });
+      const findUser = await this.userRepository
+        .createQueryBuilder()
+        .select(['id, username, email, active, createdAt, updatedAt'])
+        .where('id = :id', { id })
+        .getRawOne();
       if (!findUser) throw new NotFoundException('User not found');
 
       const user = new UserResponse({
         ...findUser,
         username: reverseSlug(findUser.username),
-        token: 'rahasia-user',
       });
 
       await this.cacheManager.set(`key=${id}`, user);

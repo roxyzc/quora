@@ -19,8 +19,6 @@ export class UserResponse {
   @Exclude()
   role: string;
 
-  token?: string;
-
   constructor(partial: Partial<UserResponse>) {
     Object.assign(this, partial);
   }
