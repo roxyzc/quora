@@ -5,16 +5,17 @@ import {
   ValidationArguments,
 } from 'class-validator';
 
-export function ValidationUsername(validationOptions?: ValidationOptions) {
+export function ValidationString(validationOptions?: ValidationOptions) {
   return function (object: object, propertyName: string) {
     registerDecorator({
-      name: 'ValidationUsername',
+      name: 'ValidationString',
       target: object.constructor,
       propertyName: propertyName,
       options: validationOptions,
       validator: {
         validate(value: string) {
           if (
+            value === undefined ||
             !validator.isAlphanumeric(validator.blacklist(value, ' ')) ||
             validator.trim(value).replace(/\s+/g, ' ') !== value
           ) {
@@ -26,7 +27,7 @@ export function ValidationUsername(validationOptions?: ValidationOptions) {
           return (
             (validationArguments.object as any)[
               `${validationArguments.property}_error`
-            ] || 'Username only a-z,A-Z,0-9'
+            ] || `${propertyName} only a-z,A-Z,0-9`
           );
         },
       },

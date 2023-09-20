@@ -6,12 +6,12 @@ import {
   MinLength,
   MaxLength,
 } from 'class-validator';
-import { ValidationUsername } from 'src/decorators/validationUsername.decorator';
+import { ValidationString } from 'src/decorators/validationString.decorator';
 
 export class SignupDto {
   @IsString()
   @IsNotEmpty()
-  @ValidationUsername()
+  @ValidationString()
   @MinLength(6)
   @MaxLength(24)
   username: string;

@@ -9,6 +9,7 @@ import { RoleGuard } from './guards/roles.guard';
 import { TokenModule } from './token/token.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { CacheConfigService } from './cache/cache.service';
+import { ContentModule } from './content/content.module';
 import config from './config';
 import databaseConfig from './config/database.config';
 
@@ -32,6 +33,7 @@ import databaseConfig from './config/database.config';
     UserModule,
     AuthModule,
     TokenModule,
+    ContentModule,
   ],
   providers: [
     {
