@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ContentService } from '../services/content.service';
 import { CreateContentDto } from '../dtos/content.dto';
 
@@ -10,5 +10,10 @@ export class ContentController {
   async createContent(@Body() body: CreateContentDto) {
     const data = await this.contentService.createContent(body);
     return { data };
+  }
+
+  @Get('get/all')
+  async getAllContent() {
+    return await this.contentService.findAll();
   }
 }

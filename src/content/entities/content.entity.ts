@@ -14,7 +14,7 @@ export class Content extends AbstractEntity<Content> {
   @Column({ type: 'text' })
   content: string;
 
-  @ManyToMany(() => Tags, { cascade: true })
+  @ManyToMany(() => Tags, { cascade: true, onDelete: 'CASCADE' })
   @JoinTable()
   tags: Tags[];
 }
